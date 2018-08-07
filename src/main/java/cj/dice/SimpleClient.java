@@ -11,29 +11,32 @@ import java.util.Scanner;
 public class SimpleClient {
 
     public static void main(String[] args) {
-        JSONObject jsonRequest = new JSONObject();
-        jsonRequest.put("name", "CJ");
-        Content response = requestResource("/command/newgame", "CJ");
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Enter name");
+        String playerName = scanner.next();
+
+        Content response = requestResource("/command/newgame", playerName);
         JSONObject jsonResponse = new JSONObject(response.asString());
 
-        Scanner scanner = new Scanner(System.in);
         String userInput;
 
         while (!isComplete(jsonResponse)) {
             printState(jsonResponse);
             userInput = scanner.next();
-            response = requestResource("/command", new JSONObject().put("state", jsonResponse).put("userInput", userInput));
-            System.out.println(response.asString());
+            int turnId = jsonResponse.getInt("turnId");
+            response = requestResource("/command", new JSONObject().put("turnId", turnId).put("userInput", userInput));
+            jsonResponse = new JSONObject(response.asString());
         }
         System.out.println("the end");
     }
 
     private static void printState(JSONObject jsonResponse) {
+        System.out.println(jsonResponse.getString("result"));
         System.out.println("enter command");
     }
 
     private static boolean isComplete(JSONObject jsonResponse) {
-        return (Boolean) jsonResponse.getJSONObject("scoreboard").get("complete");
+        return jsonResponse.getBoolean("complete");
     }
 
     private static Content requestResource(String resource, String data) {
