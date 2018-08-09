@@ -31,7 +31,7 @@ public class SimpleClient {
         String userInput;
 
         while (!isComplete(jsonResponse)) {
-            printResult(result);
+            printResult(result, jsonResponse.getInt("numberOfRolls"));
             userInput = scanner.next();
             Optional<ClientCommand> executableClientCommand = findExecutableClientCommand(userInput);
             if (executableClientCommand.isPresent()) {
@@ -50,9 +50,9 @@ public class SimpleClient {
         return clientCommands.stream().filter(c -> c.isTrigger(userInput)).findFirst();
     }
 
-    private static void printResult(String result) {
+    private static void printResult(String result, int numberOfRolls) {
         System.out.println(result);
-        System.out.println("enter command");
+        System.out.println("enter command [" + numberOfRolls + "]");
     }
 
     private static boolean isComplete(JSONObject jsonResponse) {
