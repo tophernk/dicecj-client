@@ -37,12 +37,14 @@ public class SimpleClient {
             if (executableClientCommand.isPresent()) {
                 result = executableClientCommand.get().execute(userInput, jsonResponse);
             } else {
-                int turnId = jsonResponse.getInt("turnId");
-                response = requestResource("/command", new JSONObject().put("turnId", turnId).put("userInput", userInput));
+                int gameId = jsonResponse.getInt("gameId");
+                response = requestResource("/command", new JSONObject().put("gameId", gameId).put("userInput", userInput).toString());
                 jsonResponse = new JSONObject(response.asString());
                 result = jsonResponse.getString("result");
             }
         }
+
+        System.out.println(requestResource("/command/finishGame", Integer.toString(jsonResponse.getInt("gameId"))));
         System.out.println("the end");
     }
 
@@ -69,13 +71,4 @@ public class SimpleClient {
         return response;
     }
 
-    private static Content requestResource(String resource, JSONObject jsonData) {
-        Content response = null;
-        try {
-            response = Request.Post("http://localhost:8080/dicecj/resources" + resource).body(new StringEntity(jsonData.toString())).execute().returnContent();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return response;
-    }
 }
