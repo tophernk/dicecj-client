@@ -13,6 +13,11 @@ import java.util.Scanner;
 
 public class SimpleClient {
 
+    public static final String NUMBER_OF_ROLLS = "numberOfRolls";
+    public static final String GAME_ID = "gameId";
+    public static final String RESULT = "result";
+    public static final String DICECJ_RESOURCE = "http://localhost:8080/dicecj/resources";
+    public static final String COMPLETE = "complete";
     public static List<ClientCommand> clientCommands;
 
     static {
@@ -21,30 +26,33 @@ public class SimpleClient {
     }
 
     public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-        System.out.println("Enter name");
-        String playerName = scanner.next();
-
-        Content response = requestResource("/command/newgame", playerName);
+        Content response = requestGetResource("/command/overview");
         JSONObject jsonResponse = new JSONObject(response.asString());
-        String result = jsonResponse.getString("result");
+        jsonResponse.put(NUMBER_OF_ROLLS, -1);
+        jsonResponse.put(GAME_ID, -1);
+        jsonResponse.put(RESULT, response.asString());
+        jsonResponse.put(COMPLETE, false);
+        System.out.println(jsonResponse);
+
+        Scanner scanner = new Scanner(System.in);
         String userInput;
+        String result = null;
 
         while (!isComplete(jsonResponse)) {
-            printResult(result, jsonResponse.getInt("numberOfRolls"));
+            printResult(result, jsonResponse.getInt(NUMBER_OF_ROLLS));
             userInput = scanner.next();
             Optional<ClientCommand> executableClientCommand = findExecutableClientCommand(userInput);
             if (executableClientCommand.isPresent()) {
                 result = executableClientCommand.get().execute(userInput, jsonResponse);
             } else {
-                int gameId = jsonResponse.getInt("gameId");
-                response = requestResource("/command", new JSONObject().put("gameId", gameId).put("userInput", userInput).toString());
+                int gameId = jsonResponse.getInt(GAME_ID);
+                response = requestPostResource("/command", new JSONObject().put(GAME_ID, gameId).put("userInput", userInput).toString());
                 jsonResponse = new JSONObject(response.asString());
-                result = jsonResponse.getString("result");
+                result = jsonResponse.getString(RESULT);
             }
         }
 
-        System.out.println(requestResource("/command/finishGame", Integer.toString(jsonResponse.getInt("gameId"))));
+        System.out.println(requestPostResource("/command/finishGame", Integer.toString(jsonResponse.getInt(GAME_ID))));
         System.out.println("the end");
     }
 
@@ -58,13 +66,23 @@ public class SimpleClient {
     }
 
     private static boolean isComplete(JSONObject jsonResponse) {
-        return jsonResponse.getBoolean("complete");
+        return jsonResponse.getBoolean(COMPLETE);
     }
 
-    private static Content requestResource(String resource, String data) {
+    private static Content requestGetResource(String resource) {
         Content response = null;
         try {
-            response = Request.Post("http://localhost:8080/dicecj/resources" + resource).body(new StringEntity(data)).execute().returnContent();
+            response = Request.Get(DICECJ_RESOURCE + resource).execute().returnContent();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return response;
+    }
+
+    private static Content requestPostResource(String resource, String data) {
+        Content response = null;
+        try {
+            response = Request.Post(DICECJ_RESOURCE + resource).body(new StringEntity(data)).execute().returnContent();
         } catch (IOException e) {
             e.printStackTrace();
         }
