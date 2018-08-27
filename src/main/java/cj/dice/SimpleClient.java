@@ -51,9 +51,7 @@ public class SimpleClient {
                 result = jsonResponse.getString(RESULT);
             }
         }
-
-        System.out.println(requestPostResource("/command/finishGame", Integer.toString(jsonResponse.getInt(GAME_ID))));
-        System.out.println("the end");
+        System.out.println("scoreboard is complete");
     }
 
     private static Optional<ClientCommand> findExecutableClientCommand(String userInput) {
